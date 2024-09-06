@@ -1,7 +1,7 @@
 # Ansible Inventory
 inventory
 *.inventory
-inventory.*
+inventory.ini
 *.inventory
 
 # Security Keys
