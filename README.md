@@ -17,7 +17,7 @@ Ansible Playbook for deploying a Flask web applications with database.
     ```
 
 ## Usage
-1. Load the necessary environment variables (as needed) for authentication (if using SSH username and password). *You may refer to the contents of `.env.sample`.*
+1. Load the necessary environment variables (as needed) for authentication (if using SSH username and password) *you may refer to the contents of `.env.sample`*. Ideally, authentication between the control node and managed nodes should be key-based without password.
 2. Setup the `inventory.ini` file using `inventory.ini.sample` as the base. Host groupings are set to `db` and `app` as reflected in the plays that can be viewed in `playbook.yaml`.
 3. Create a `config.yaml` file using `config.yaml.sample` as the base. Modify the configurations and `playbook.yaml` according to preference.
 4. Run the playbook.
