@@ -1,0 +1,19 @@
+---
+- name: Restart Gunicorn
+  systemd:
+    name: flaskapp
+    state: restarted
+    enabled: yes
+  become: yes
+
+- name: Restart HTTPD
+  service:
+    name: httpd
+    state: restarted
+  become: yes
+
+- name: Reload firewall
+  service:
+    name: firewalld
+    state: restarted
+  become: yes

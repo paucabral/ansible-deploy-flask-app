@@ -1,0 +1,15 @@
+project_repository: "https://github.com/paucabral/flask-fullstack-crud-with-auth.git"
+project_name: "demo-flask-app"
+
+# Change according to project requirement...
+# DB VARS
+db_user: flaskappuser
+db_password: flaskapppassword
+db_name: flaskapp
+
+# APP VARS
+FLASK_ENV: "production"
+DEBUG: False
+PORT: 5000
+PROD_SECRET_KEY: "secret"
+# PROD_SQLALCHEMY_DATABASE_URI: "sql:///flaskapp.db"

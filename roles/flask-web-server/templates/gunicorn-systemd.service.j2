@@ -1,0 +1,14 @@
+[Unit]
+Description=Gunicorn instance to serve {{ project_name }}
+After=network.target
+
+[Service]
+User={{ ansible_user }}
+Group={{ ansible_user }}
+WorkingDirectory=/home/{{ ansible_user }}/{{ project_name }}
+Environment="PATH=/home/{{ ansible_user }}/{{ project_name }}/venv/bin"
+EnvironmentFile=/etc/environment
+ExecStart=/home/{{ ansible_user }}/{{ project_name }}/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:{{ PORT }} app:app
+
+[Install]
+WantedBy=multi-user.target

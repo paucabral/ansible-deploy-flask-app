@@ -1,0 +1,97 @@
+---
+- name: Install required packages
+  yum:
+    name: 
+      - git
+      - python3
+      - python3-pip
+      - python3-psycopg2
+      - httpd
+      - mod_wsgi
+    state: present
+  become: yes
+
+- name: Clone git repository
+  git:
+    repo: "{{ project_repository }}"
+    dest: "/home/{{ ansible_user }}/{{ project_name }}"
+
+- name: Ensure Python virtual environment exists
+  command: "python3 -m venv /home/{{ ansible_user }}/{{ project_name }}/venv"
+  args:
+    creates: /home/{{ ansible_user }}/{{ project_name }}/venv/bin/activate
+
+- name: Install dependencies from requirements.txt
+  pip:
+    requirements: "/home/{{ ansible_user }}/{{ project_name }}/requirements.txt"
+    virtualenv: "/home/{{ ansible_user }}/{{ project_name }}/venv"
+
+- name: Set environment variables
+  blockinfile:
+    path: /etc/environment
+    block: |
+      FLASK_APP="/home/{{ ansible_user }}/{{ project_name }}/app.py"
+      FLASK_ENV="{{ FLASK_ENV }}"
+      DEBUG="{{ DEBUG }}"
+      PORT="{{ PORT }}"
+      PROD_SECRET_KEY="{{ PROD_SECRET_KEY }}"
+      PROD_SQLALCHEMY_DATABASE_URI="{{ PROD_SQLALCHEMY_DATABASE_URI }}"
+  become: yes
+
+- name: Create instance and migrations directory
+  file:
+    path: "/home/{{ ansible_user }}/{{ project_name }}/instance"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Check if migrations directory exists
+  stat:
+    path: "/home/{{ ansible_user }}/{{ project_name }}/migrations"
+  register: migrations_dir
+
+- name: Run Flask DB commands (init, migrate, upgrade)
+  shell: source /home/{{ ansible_user }}/{{ project_name }}/venv/bin/activate && flask db {{ item }}
+  args:
+    chdir: "/home/{{ ansible_user }}/{{ project_name }}"
+  loop:
+    - init
+    - migrate
+    - upgrade
+  when: (item == 'init' and not migrations_dir.stat.exists) or item != 'init'
+
+- name: Create WSGI entry point
+  copy:
+    dest: "/home/{{ ansible_user }}/{{ project_name }}/flaskapp.wsgi"
+    content: |
+      import sys
+      sys.path.insert(0, '/home/{{ ansible_user }}/{{ project_name }}')
+      from app import app as application
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+
+- name: Create Gunicorn systemd service file
+  template:
+    src: templates/gunicorn-systemd.service.j2
+    dest: /etc/systemd/system/flaskapp.service
+    mode: '0644'
+  become: yes
+  notify: Restart Gunicorn
+
+- name: Configure HTTPD to serve Flask app
+  template:
+    src: templates/httpd-flask-app.conf.j2
+    dest: /etc/httpd/conf.d/flaskapp.conf
+    mode: '0644'
+  become: yes
+  notify: Restart HTTPD
+
+- name: Enable HTTP in firewall
+  firewalld:
+    service: http
+    permanent: true
+    state: enabled
+  become: yes
+  notify: Reload firewall

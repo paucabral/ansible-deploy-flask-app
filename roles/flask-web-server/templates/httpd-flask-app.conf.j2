@@ -1,0 +1,16 @@
+<VirtualHost *:80>
+    ServerName {{ ansible_hostname }}
+
+    ProxyPreserveHost On
+    ProxyRequests Off
+    <Proxy *>
+        Order deny,allow
+        Allow from all
+    </Proxy>
+
+    ProxyPass / http://127.0.0.1:{{ PORT }}/
+    ProxyPassReverse / http://127.0.0.1:{{ PORT }}/
+
+    ErrorLog /var/log/httpd/flaskapp-error.log
+    CustomLog /var/log/httpd/flaskapp-access.log combined
+</VirtualHost>

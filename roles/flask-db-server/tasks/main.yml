@@ -1,0 +1,99 @@
+---
+- name: Install required packages
+  yum:
+    name: 
+      - python3
+      - python3-pip
+      - python3-psycopg2
+      - postgresql
+      - postgresql-server
+    state: present
+  become: yes
+
+- name: Check if PostgreSQL is initialized
+  ansible.builtin.stat:
+    path: "/var/lib/pgsql/data/pg_hba.conf"
+  register: postgres_data
+  become: yes
+
+- name: Initialize PostgreSQL
+  shell: "postgresql-setup initdb"
+  when: not postgres_data.stat.exists
+  become: yes
+
+- name: Start and enable PostgreSQL service
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items:
+    - postgresql
+  become: yes
+
+- name: Create app database
+  postgresql_db:
+    state: present
+    name: "{{ db_name }}"
+  become: yes
+  become_user: postgres
+
+- name: Create DB user
+  postgresql_user:
+    state: present
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+  become: yes
+  become_user: postgres
+
+- name: Grant DB user access to app DB
+  postgresql_privs:
+    type: database
+    database: "{{ db_name }}"
+    roles: "{{ db_user }}"
+    grant_option: no
+    privs: all
+  become: yes
+  become_user: postgres
+
+- name: Allow md5 connection for the db user
+  postgresql_pg_hba:
+    dest: "~/data/pg_hba.conf"
+    contype: host
+    databases: all
+    method: md5
+    users: "{{ db_user }}"
+    create: true
+  become: yes
+  become_user: postgres
+  notify: Restart PostgreSQL service
+
+- name: Ensure PostgreSQL listens on all addresses
+  lineinfile:
+    path: /var/lib/pgsql/data/postgresql.conf
+    regexp: '^#?listen_addresses\s*='
+    line: "listen_addresses = '*'"
+  become: yes
+  notify: Restart PostgreSQL service
+
+- name: Ensure PostgreSQL allows connections from specific IPs
+  postgresql_pg_hba:
+    dest: "~/data/pg_hba.conf"
+    contype: host
+    databases: "{{ db_name }}"
+    source: "{{ item }}"
+    method: md5
+    users: "{{ db_user }}"
+    create: true
+  become: yes
+  become_user: postgres
+  with_items: "{{ allowed_sources }}"
+  notify: Restart PostgreSQL service
+
+- name: Add rich rules for allowed sources
+  firewalld:
+    rich_rule: 'rule family="ipv4" source address="{{ item }}" port port="5432" protocol="tcp" accept'
+    state: enabled
+    permanent: yes
+  become: yes
+  with_items: "{{ allowed_sources }}"
+  notify: Reload firewall

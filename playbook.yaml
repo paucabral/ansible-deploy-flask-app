@@ -1,0 +1,25 @@
+---
+- name: Deploy Flask DB Server
+  hosts: db
+  vars_files:
+    - group_vars/credentials.yaml
+    - config.yaml
+  vars:
+    allowed_sources:
+      - "{{ hostvars['app']['ansible_host'] }}/32"
+  
+  roles:
+    - role: flask-db-server
+      when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Deploy Flask Web Server
+  hosts: app
+  vars_files:
+    - group_vars/credentials.yaml
+    - config.yaml
+  vars:
+    PROD_SQLALCHEMY_DATABASE_URI: "postgresql://{{ db_user }}:{{ db_password }}@{{ hostvars['db']['ansible_host'] }}:5432/{{ db_name }}"
+
+  roles:
+    - role: flask-web-server
+      when: ansible_facts['os_family'] == 'RedHat'

@@ -1,0 +1,10 @@
+---
+project_repository: ""
+project_name: ""
+
+# Change according to project requirement...
+FLASK_ENV: ""
+DEBUG: ""
+PORT: ""
+PROD_SECRET_KEY: ""
+PROD_SQLALCHEMY_DATABASE_URI: ""

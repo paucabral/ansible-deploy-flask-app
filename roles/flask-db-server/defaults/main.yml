@@ -1,0 +1,8 @@
+---
+# defaults file for roles/flask-db-server
+db_user: flaskappuser
+db_password: flaskapppassword
+db_name: flaskapp
+
+allowed_sources:
+  - "{{ ansible_host }}"
