@@ -28,7 +28,7 @@ Ansible Playbook for deploying a Flask web applications with database.
 ## Tested Environment
 This playbook is developed primarily using **Centos 9 Stream** as the targe environment. Specifically using [bento/centos-stream-9 Vagrant box](https://app.vagrantup.com/bento/boxes/centos-stream-9). As such, roles are expected (but **not guaranteed**) to work on `RedHat` OS Family.
 
-*Checkout this [automation demo for 2-tier deployment in Virtualbox](https://github.com/paucabral/local-iac-virtualbox-demo/tree/2-tier-sampler) to automate the setup of test environment. For the demo application used, checkout this repository for the [demo Flask app](https://github.com/paucabral/flask-fullstack-crud-with-auth).*
+*Checkout this [automation demo for 2-tier deployment in Virtualbox](https://github.com/paucabral/local-iac-virtualbox-demo/tree/2-tier-sampler) to automate the setup of test environment. For the demo application used, checkout this repository for the [demo Flask app](https://github.com/paucabral/flask-note-app-demo-monolithic).*
 
 ## Known Bugs
 1. Error on `TASK [flask-web-server : Run Flask DB commands (init, migrate, upgrade)]`.
